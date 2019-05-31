@@ -5,12 +5,10 @@ import java.util.Objects;
 import org.observe.util.TypeTokens;
 import org.qommons.collect.ParameterSet.ParameterMap;
 
-public class EntityIdentity implements Comparable<EntityIdentity> {
-	private final EntityType theType;
+public class EntityIdentity implements FieldValues, Comparable<EntityIdentity> {
 	private final ParameterMap<Comparable<?>> theValues;
 
 	public EntityIdentity(EntityType type, ParameterMap<Comparable<?>> values) {
-		theType = type;
 		theValues = values;
 		for (int i = 0; i < values.keySet().size(); i++) {
 			if (values.get(i) == null) {
@@ -24,8 +22,24 @@ public class EntityIdentity implements Comparable<EntityIdentity> {
 		}
 	}
 
-	public EntityType getType() {
-		return theType;
+	@Override
+	public Object getField(String fieldName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object getField(int fieldIndex) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <F> F getField(EntityField<F> field) {
+		if(field.get
+		return 
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public ParameterMap<Comparable<?>> getValues() {
