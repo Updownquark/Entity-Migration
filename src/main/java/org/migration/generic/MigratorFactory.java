@@ -59,7 +59,6 @@ public class MigratorFactory {
             Element ret = new Element("field-added").setAttribute("entity", migrator.getEntityName());
             ret.setAttribute("field", addMig.field);
             ret.setAttribute("type", PersistenceUtils.toString(addMig.type));
-            ret.setAttribute("nullable", "" + addMig.nullable);
             if (addMig.map != null) {
 				ret.setAttribute("map", "" + addMig.map);
 			}
@@ -72,7 +71,6 @@ public class MigratorFactory {
             Element ret = new Element("field-removed").setAttribute("entity", migrator.getEntityName());
             ret.setAttribute("field", remMig.field);
             ret.setAttribute("type", PersistenceUtils.toString(remMig.type));
-            ret.setAttribute("nullable", "" + remMig.nullable);
             if (remMig.map != null) {
 				ret.setAttribute("map", "" + remMig.map);
 			}
@@ -256,11 +254,10 @@ public class MigratorFactory {
 			}
             String fieldName = xml.getAttributeValue("field");
 			Type fieldType = PersistenceUtils.getType(xml.getAttributeValue("type"), types, theTypeGetter);
-            boolean nullable = !"false".equalsIgnoreCase(xml.getAttributeValue("nullable"));
             String map = xml.getAttributeValue("map");
             PersistenceUtils.getMappedField(
-                    new EntityField(entity, fieldName, fieldType, nullable, map, split(xml.getAttributeValue("sorting"))), types);
-            return new FieldAddedMigrator(entityName, fieldName, fieldType, nullable, map, split(xml.getAttributeValue("sorting")));
+				new EntityField(entity, fieldName, fieldType, map, split(xml.getAttributeValue("sorting"))), types);
+			return new FieldAddedMigrator(entityName, fieldName, fieldType, map, split(xml.getAttributeValue("sorting")));
         case "value-added":
             if (enumName == null) {
 				throw new IllegalArgumentException("No enum specified for migration " + xml.getName());
@@ -282,8 +279,7 @@ public class MigratorFactory {
             if (field == null) {
 				throw new IllegalArgumentException("No such field " + entityName + "." + fieldName);
 			}
-            return new FieldRemovedMigrator(entityName, fieldName, field.getType(), field.isNullable(), field.getMappingField(),
-                    field.getSorting());
+			return new FieldRemovedMigrator(entityName, fieldName, field.getType(), field.getMappingField(), field.getSorting());
         case "value-removed":
             if (enumName == null) {
 				throw new IllegalArgumentException("No enum specified for migration " + xml.getName());

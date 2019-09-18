@@ -70,7 +70,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
             EntityField oldId = getIdField();
             EntityField newId = superType.getIdField();
 			if (oldId.getName().equals(newId.getName()) && oldId.getType().equals(newId.getType())
-				&& oldId.isNullable() == newId.isNullable() && ArrayUtils.equals(oldId.getSorting(), newId.getSorting())) {
+				&& ArrayUtils.equals(oldId.getSorting(), newId.getSorting())) {
             } else {
 				throw new IllegalArgumentException("Replacement super-type's ID field must be the same as this type");
 			}
@@ -94,8 +94,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
 		} else {
 			// Can't not have an ID
 			theIdField = addField(theSuperType.getIdField().getName(), theSuperType.getIdField().getType(),
-				theSuperType.getIdField().isNullable(), theSuperType.getIdField().getMappingField(),
-				theSuperType.getIdField().getSorting());
+				theSuperType.getIdField().getMappingField(), theSuperType.getIdField().getSorting());
         }
         EntityField[] oldSuperFields = theSuperType == null ? new EntityField[0]
                 : theSuperType.theFields.values().toArray(new EntityField[0]);
@@ -127,9 +126,6 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
                     throw new IllegalArgumentException("Cannot replace super-type: " + superType.getName() + "." + o.getName()
                             + "'s sorting (" + Arrays.toString(o.getSorting()) + ") is not the same as " + getName() + "."
                             + localField.getName() + " (" + Arrays.toString(localField.getSorting()) + ")");
-                } else if (!localField.isNullable() && o.isNullable()) {
-                    throw new IllegalArgumentException("Cannot replace super-type: " + superType.getName() + "." + o.getName()
-                            + " may have null values which are not allowed in " + getName() + "." + localField.getName());
                 } else {
                     localFieldsToRemove.add(o.getName());
                 }
@@ -149,8 +145,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
             @Override
             public EntityField set(EntityField o1, int idx1, int incMod, EntityField o2, int idx2, int retIdx) {
                 // Fields must be the same
-                if (o1.getType().equals(o2.getType()) && o1.isNullable() == o2.isNullable()
-                        && ArrayUtils.equals(o1.getSorting(), o2.getSorting())) {
+				if (o1.getType().equals(o2.getType()) && ArrayUtils.equals(o1.getSorting(), o2.getSorting())) {
                 } else {
                     throw new IllegalArgumentException("Cannot replace super-type: " + superType.getName() + "." + o1.getName()
                             + " is not equivalent to " + theSuperType + "." + o1.getName());
@@ -161,7 +156,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
         internalSetSuperType(superType);
         theFields.keySet().removeAll(localFieldsToRemove);
         for (EntityField field : superFieldsToAdd) {
-            EntityField newField = new EntityField(this, field.getName(), field.getType(), field.isNullable(), field.getMappingField(),
+			EntityField newField = new EntityField(this, field.getName(), field.getType(), field.getMappingField(),
                     field.getSorting());
             theFields.put(field.getName(), newField);
         }
@@ -237,7 +232,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
             } else {
 				fieldType = PersistenceUtils.convertToEntity(field.type, allTypes);
 			}
-            EntityField entityField = new EntityField(this, field.name, fieldType, field.nullable, field.mapping, field.ordering);
+			EntityField entityField = new EntityField(this, field.name, fieldType, field.mapping, field.ordering);
             theFields.put(field.name, entityField);
             if (field.id) {
 				theIdField = entityField;
@@ -278,8 +273,8 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
                 throw new IllegalArgumentException(e.getMessage() + " for field " + theEntityName + "." + fieldName, e);
             }
             theFields.put(fieldName,
-                    new EntityField(this, fieldName, fieldType, !"false".equalsIgnoreCase(fieldEl.getAttributeValue("nullable")),
-                            fieldEl.getAttributeValue("map"), MigratorFactory.split(fieldEl.getAttributeValue("sorting"))));
+				new EntityField(this, fieldName, fieldType, fieldEl.getAttributeValue("map"),
+					MigratorFactory.split(fieldEl.getAttributeValue("sorting"))));
         }
         String idField = element.getAttributeValue("id");
         if (idField != null) {
@@ -313,7 +308,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
         for (Map.Entry<String, EntityField> field : theFields.entrySet()) {
             EntityField f = field.getValue();
             if (f.getType() == clazz) {
-                EntityField newField = new EntityField(this, f.getName(), type, f.isNullable(), f.getMappingField(), f.getSorting());
+				EntityField newField = new EntityField(this, f.getName(), type, f.getMappingField(), f.getSorting());
                 field.setValue(newField);
                 if (f.isId()) {
 					theIdField = newField;
@@ -340,16 +335,14 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
 	 *            The name for the new field
 	 * @param type
 	 *            The type for the new field
-	 * @param nullable
-	 *            Whether the new field is to be nullable
 	 * @param map
 	 *            The field on the target entity referring back to this type
 	 * @param sorting
 	 *            The columns to sort the field's collection value by
 	 * @return The new field
 	 */
-	protected EntityField addField(String name, Type type, boolean nullable, String map, String[] sorting) {
-		EntityField newField = new EntityField(this, name, type, nullable, map, sorting);
+	protected EntityField addField(String name, Type type, String map, String[] sorting) {
+		EntityField newField = new EntityField(this, name, type, map, sorting);
 		theFields.put(name, newField);
 		return newField;
     }
@@ -478,7 +471,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
         if (field == null) {
 			throw new IllegalArgumentException("No such field " + fieldName + " in entity " + getName());
 		}
-        PersistenceUtils.checkType(this, field.getName(), field.getType(), field.isNullable(), value);
+		PersistenceUtils.checkType(this, field.getName(), field.getType(), value);
     }
 
     /**
@@ -502,7 +495,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
 				continue;
 			}
 
-            EntityField newField = new EntityField(this, field.getName(), newFieldType, field.isNullable(), field.getMappingField(),
+			EntityField newField = new EntityField(this, field.getName(), newFieldType, field.getMappingField(),
                     field.getSorting());
             theFields.put(field.getName(), newField);
             if (theIdField != null && theIdField.getName().equals(field.getName())) {
@@ -523,13 +516,10 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
             Element fieldEl = new Element(PersistenceUtils.javaToXml(field.getName()));
             ret.addContent(fieldEl);
             fieldEl.setAttribute("type", PersistenceUtils.toString(field.getType()));
-            fieldEl.setAttribute("nullable", "" + field.isNullable());
-            if (field.getSorting().length > 0) {
+			if (field.getSorting().length > 0)
 				fieldEl.setAttribute("sorting", MigratorFactory.join(field.getSorting()));
-			}
-            if (field.getMappingField() != null) {
+			if (field.getMappingField() != null)
 				fieldEl.setAttribute("map", field.getMappingField());
-			}
         }
         return ret;
     }
@@ -586,8 +576,7 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
         }
         ret.theFields = new TreeMap<>();
         for (EntityField field : theFields.values()) {
-            EntityField newField = new EntityField(this, field.getName(), field.getType(), field.isNullable(), field.getMappingField(),
-                    field.getSorting());
+			EntityField newField = new EntityField(this, field.getName(), field.getType(), field.getMappingField(), field.getSorting());
             ret.theFields.put(field.getName(), newField);
         }
         if (ret.theIdField != null) {

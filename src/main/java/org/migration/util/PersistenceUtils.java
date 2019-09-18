@@ -18,12 +18,9 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.OrderColumn;
 
@@ -358,17 +355,12 @@ public class PersistenceUtils {
      *            The name of the field being checked
      * @param type
      *            The type to check against
-     * @param nullable
-     *            Whether a null value is acceptable
      * @param value
      *            The value to check for compatibility with the field
      * @throws IllegalArgumentException
      *             If the given value cannot be assigned to the given field for any reason
      */
-    public static void checkType(EntityType entity, String name, Type type, boolean nullable, Object value) throws IllegalArgumentException {
-        if (value == null && !nullable) {
-            throw new IllegalArgumentException("Field " + name + " of type " + entity.getName() + " is not nullable");
-        }
+	public static void checkType(EntityType entity, String name, Type type, Object value) throws IllegalArgumentException {
         if (value == null && type instanceof Class && ((Class<?>) type).isPrimitive()) {
             throw new IllegalArgumentException("Field " + name + " of type " + entity.getName() + " is primitive--may not be set to null");
         }
@@ -428,14 +420,14 @@ public class PersistenceUtils {
                 if (value instanceof Collection) {
                     Type elType = pt.getActualTypeArguments()[0];
                     for (Object val : (Collection<?>) value) {
-                        checkType(entity, name, elType, true, val);
+						checkType(entity, name, elType, val);
                     }
                 } else if (value instanceof Map) {
                     Type keyType = pt.getActualTypeArguments()[0];
                     Type valType = pt.getActualTypeArguments()[1];
                     for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-                        checkType(entity, name, keyType, true, entry.getKey());
-                        checkType(entity, name, valType, true, entry.getValue());
+						checkType(entity, name, keyType, entry.getKey());
+						checkType(entity, name, valType, entry.getValue());
                     }
                 } else {
                     // With custom types possible, this is not good
@@ -874,27 +866,6 @@ public class PersistenceUtils {
         } else {
             throw new IllegalArgumentException("Unacceptable type: " + type.getClass().getName() + ": " + type);
         }
-    }
-
-    /**
-     * @param getter
-     *            The getter method to check
-     * @return Whether the field fronted by the given getter may be set to null
-     */
-    public static boolean isNullable(Method getter) {
-        Column col = getter.getAnnotation(Column.class);
-        if (col != null) {
-            return col.nullable();
-        }
-        ManyToOne mto = getter.getAnnotation(ManyToOne.class);
-        if (mto != null) {
-            return mto.optional();
-        }
-        OneToOne oto = getter.getAnnotation(OneToOne.class);
-        if (oto != null) {
-            return oto.optional();
-        }
-        return true;
     }
 
     /**

@@ -151,15 +151,6 @@ public class EntityDifference {
                 ret.append("Type changed from ").append(PersistenceUtils.toString(field.getKey().getType())).append(" to ")
                         .append(PersistenceUtils.toString(field.getValue().getType()));
             }
-
-            if (field.getKey().isNullable() != field.getValue().isNullable()) {
-                if (!firstMod)
-                    ret.append(", ");
-                else
-                    firstMod = false;
-                ret.append(field.getKey().isNullable() ? "nullable" : "non-nullable").append(" to ")
-                        .append(field.getValue().isNullable() ? "nullable" : "non-nullable");
-            }
         }
         if (ret.length() > 0) {
             ret.delete(0, 1); // Delete the first \n
@@ -189,10 +180,6 @@ public class EntityDifference {
             if (!field.getKey().getType().equals(field.getValue().getType())) {
                 ret.append("Type changed from ").append(PersistenceUtils.toString(field.getKey().getType())).append(" to ")
                         .append(PersistenceUtils.toString(field.getValue().getType()));
-            }
-            if (field.getKey().isNullable() != field.getValue().isNullable()) {
-                ret.append(field.getKey().isNullable() ? "nullable" : "non-nullable").append(" to ")
-                        .append(field.getValue().isNullable() ? "nullable" : "non-nullable");
             }
         }
         if (ret.length() > 0) {

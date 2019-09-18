@@ -39,9 +39,9 @@ import org.migration.generic.EntityVersionSupport;
 import org.migration.generic.EnumDifference;
 import org.migration.generic.EnumType;
 import org.migration.generic.GenericEntity;
-import org.migration.generic.SimpleGenericEntitySet;
 import org.migration.generic.GenericEntitySet;
 import org.migration.generic.MigratorFactory;
+import org.migration.generic.SimpleGenericEntitySet;
 import org.migration.util.HibernateExtractionUtil;
 import org.migration.util.PersistenceUtils;
 import org.qommons.io.HierarchicalResourceReader;
@@ -628,9 +628,9 @@ public class EntityMigration {
 							allFound = false;
 						}
                     }
-                    if (!allFound && !field.isNullable()) {
+					if (!allFound) {
 						System.err.println("Some entities referenced by " + field + "'s mapping field " + field.getMappingField()
-                                + " could not be linked");
+							+ " could not be linked");
 					}
                 } else {
 					for (GenericEntity entity : entities.queryAll(type.getName())) {

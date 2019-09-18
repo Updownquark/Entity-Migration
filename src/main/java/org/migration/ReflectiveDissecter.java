@@ -108,7 +108,7 @@ public class ReflectiveDissecter<T> implements ValueDissecter {
             theGetters.put(fieldName, getter);
             Method setter = ReflectionUtils.getSetter(type, getter, true);
             theSetters.put(fieldName, setter);
-            if (PersistenceUtils.isNullable(getter) && !getter.getReturnType().isPrimitive() && setter.getParameterTypes()[0].isPrimitive()) {
+			if (!getter.getReturnType().isPrimitive() && setter.getParameterTypes()[0].isPrimitive()) {
 				System.err.println("WARNING: Setter for nullable field " + type.getName() + "." + fieldName + " accepts a primitive value");
 			}
         }
@@ -126,12 +126,11 @@ public class ReflectiveDissecter<T> implements ValueDissecter {
             Method getter = entry.getValue();
             MigrationField migField = getter.getAnnotation(MigrationField.class);
             boolean id = (migField != null && migField.id()) || getter.getAnnotation(Id.class) != null;
-            boolean nullable = PersistenceUtils.isNullable(getter);
             String mapping = PersistenceUtils.getMap(getter);
             String[] sorting = PersistenceUtils.getSorting(getter);
 			Comparator<?> sortCompare = getSortComparator(getter);
 
-            fields.add(TypedField.builder(theType, entry.getKey(), getter.getGenericReturnType()).id(id).nullable(nullable).mapping(mapping)
+			fields.add(TypedField.builder(theType, entry.getKey(), getter.getGenericReturnType()).id(id).mapping(mapping)
 					.ordering(sorting).sort(sortCompare).build());
         }
         return fields.toArray(new TypedField[fields.size()]);

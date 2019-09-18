@@ -75,7 +75,7 @@ public class EntitySetConverter {
                     ArrayList<TypedField> ret = new ArrayList<>();
                     for (EntityField field : genericType) {
                         TypedField.Builder builder = TypedField.builder(type, field.getName(), field.getType());
-                        builder.id(field.isId()).nullable(field.isNullable()).mapping(field.getMappingField()).ordering(field.getSorting());
+						builder.id(field.isId()).mapping(field.getMappingField()).ordering(field.getSorting());
                         ret.add(builder.build());
                     }
                     return ret.toArray(new TypedField[ret.size()]);

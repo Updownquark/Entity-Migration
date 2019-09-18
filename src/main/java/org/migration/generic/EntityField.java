@@ -23,9 +23,6 @@ public class EntityField {
      */
     private final Type theType;
 
-    /** Whether this field is nullable */
-    private boolean isNullable;
-
     private String theMappingField;
 
     private String[] theSorting;
@@ -37,14 +34,12 @@ public class EntityField {
      *            The field's name
      * @param aType
      *            The field's type
-     * @param _nullable
-     *            Whether the field is nullable
      * @param map
      *            The field on the target entity referring back to this field's type
      * @param sorting
      *            The columns that this field's collection is sorted by, in order
      */
-    public EntityField(EntityType anEntity, String aName, Type aType, boolean _nullable, String map, String[] sorting) {
+	public EntityField(EntityType anEntity, String aName, Type aType, String map, String[] sorting) {
         if (anEntity == null)
             throw new NullPointerException("No entity for field");
         if (aName == null)
@@ -54,7 +49,6 @@ public class EntityField {
         entity = anEntity;
         theName = PersistenceUtils.javaToXml(aName);
         theType = aType;
-        isNullable = _nullable;
         theMappingField = map;
         theSorting = sorting;
 
@@ -75,11 +69,6 @@ public class EntityField {
     /** @return This field's type */
     public Type getType() {
         return theType;
-    }
-
-    /** @return Whether null objects can be assigned to this field */
-    public boolean isNullable() {
-        return isNullable;
     }
 
     /** @return The field on the target entity referring back to this field's type */
@@ -105,14 +94,6 @@ public class EntityField {
         theName = name;
     }
 
-    /**
-     * @param nullable
-     *            Whether this field may be assigned a null value
-     */
-    protected void setNullable(boolean nullable) {
-        isNullable = nullable;
-    }
-
     @Override
     public boolean equals(Object o) {
 		if (this == o)
@@ -126,8 +107,6 @@ public class EntityField {
             return false;
         if (!PersistenceUtils.equals(field.theType, theType))
             return false;
-        if (field.isNullable != isNullable)
-            return false;
         return true;
     }
 
@@ -135,7 +114,6 @@ public class EntityField {
     public int hashCode() {
         int ret = theName.hashCode();
         ret = ret * 13 + PersistenceUtils.hashCode(theType);
-        ret = ret * 7 + (isNullable ? 1 : 0);
         return ret;
     }
 

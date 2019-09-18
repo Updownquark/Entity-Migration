@@ -7,8 +7,6 @@ public class FieldAddedMigrator extends FieldTypeModificationMigrator {
     /** The type of the field */
     public final Type type;
     /** Whether the field is nullable */
-    public final boolean nullable;
-    /** The mapping field on the target entity */
     public final String map;
     /** The columns that this field's collection value is sorted by */
     public final String[] sorting;
@@ -20,17 +18,14 @@ public class FieldAddedMigrator extends FieldTypeModificationMigrator {
      *            The name of the field to add
      * @param fieldType
      *            The type of the field to add
-     * @param fieldNullable
-     *            Whether the field to add should be nullable
      * @param fieldMap
      *            The mapping field on the target entity
      * @param fieldSorting
      *            The columns that this field's collection value is sorted by
      */
-    public FieldAddedMigrator(String entity, String fieldName, Type fieldType, boolean fieldNullable, String fieldMap, String[] fieldSorting) {
+	public FieldAddedMigrator(String entity, String fieldName, Type fieldType, String fieldMap, String[] fieldSorting) {
         super(entity, EntityTypeModification.fieldAddition, fieldName);
         type = fieldType;
-        nullable = fieldNullable;
         map = fieldMap;
         sorting = fieldSorting;
     }

@@ -15,8 +15,6 @@ public class TypedField {
     public final Type type;
     /** Whether this field is an identifier for its type */
     public final boolean id;
-    /** Whether null is allowed in this field */
-    public final boolean nullable;
     /**
      * If this field's value is determined by a reference from the typed entity, this is the name of that field on that entity. Null for
      * non-mapped fields.
@@ -27,13 +25,12 @@ public class TypedField {
 	/** The comparator by which to sort this field (collections only) */
 	public final Comparator<?> sorting;
 
-    private TypedField(Class<?> declaringType, String name, Type type, boolean id, boolean nullable, String mapping, String[] ordering,
-			Comparator<?> sorting) {
+	private TypedField(Class<?> declaringType, String name, Type type, boolean id, String mapping, String[] ordering,
+		Comparator<?> sorting) {
         this.declaringType = declaringType;
         this.name = name;
         this.type = type;
         this.id = id;
-        this.nullable = nullable;
         this.mapping = mapping;
         this.ordering = ordering;
         this.sorting = sorting;
@@ -78,7 +75,6 @@ public class TypedField {
         private final String name;
         private final Type type;
         private boolean id = false;
-        private boolean nullable = true;
         private String mapping = null;
         private String[] ordering = new String[0];
 		private Comparator<?> sorting = null;
@@ -101,19 +97,8 @@ public class TypedField {
 					throw new IllegalStateException("Illegal type for identifier field: " + PersistenceUtils.toString(type) + " for field "
                             + declaringType + "." + name);
 				}
-                nullable = false;
             }
             this.id = id;
-            return this;
-        }
-
-        /**
-         * @param nullable
-         *            Whether the field's value can be null. True by default.
-         * @return This builder, for chaining
-         */
-        public Builder nullable(@SuppressWarnings("hiding") boolean nullable) {
-            this.nullable = nullable;
             return this;
         }
 
@@ -150,7 +135,7 @@ public class TypedField {
 
         /** @return The TypedField instance, built with the parameters set in this builder */
         public TypedField build() {
-            return new TypedField(declaringType, name, type, id, nullable, mapping, ordering, sorting);
+			return new TypedField(declaringType, name, type, id, mapping, ordering, sorting);
         }
     }
 }

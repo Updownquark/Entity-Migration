@@ -43,7 +43,6 @@ import org.migration.migrators.EnumValueRenameMigrator;
 import org.migration.migrators.FieldAddedMigrator;
 import org.migration.migrators.FieldRemovedMigrator;
 import org.migration.migrators.FieldRenameMigrator;
-import org.migration.migrators.NullabilityMigrator;
 import org.migration.migrators.ReplaceSuperMigrator;
 import org.migration.util.EnumInitializingTypeGetter;
 import org.migration.util.PersistenceUtils;
@@ -483,8 +482,7 @@ public class EntityTypeSet implements Iterable<EntityType>, Cloneable {
 			}
             FieldAddedMigrator fCreate = (FieldAddedMigrator) migrator;
             if (forward) {
-				node.theType.addField(fCreate.field, replaceType(fCreate.type), fCreate.nullable, fCreate.map,
-                        fCreate.sorting);
+				node.theType.addField(fCreate.field, replaceType(fCreate.type), fCreate.map, fCreate.sorting);
 			} else {
 				node.theType.removeField(fCreate.field);
 			}
@@ -507,7 +505,7 @@ public class EntityTypeSet implements Iterable<EntityType>, Cloneable {
             if (forward) {
 				node.theType.removeField(fRemove.field);
 			} else {
-				node.theType.addField(fRemove.field, fRemove.type, fRemove.nullable, fRemove.map, fRemove.sorting);
+				node.theType.addField(fRemove.field, fRemove.type, fRemove.map, fRemove.sorting);
 			}
             break;
         case fieldRename:
@@ -520,7 +518,7 @@ public class EntityTypeSet implements Iterable<EntityType>, Cloneable {
 				for (EntityField field : entity) {
 					if (fRename.field.equals(field.getMappingField()) && PersistenceUtils.getMappedType(field.getType()).equals(entity)) {
                         entity.removeField(field.getName());
-                        entity.addField(field.getName(), field.getType(), field.isNullable(), fRename.afterName, field.getSorting());
+						entity.addField(field.getName(), field.getType(), fRename.afterName, field.getSorting());
                     }
 				}
 			}
@@ -534,8 +532,7 @@ public class EntityTypeSet implements Iterable<EntityType>, Cloneable {
             if (node == null) {
 				throw new IllegalArgumentException("Unrecognized entity type " + migrator.getEntityName() + " for migrator " + migrator);
 			}
-            NullabilityMigrator nul = (NullabilityMigrator) migrator;
-            node.theType.getField(nul.field).setNullable(nul.nullable);
+			// This is from a legacy feature that is no longer supported
             break;
         }
     }
