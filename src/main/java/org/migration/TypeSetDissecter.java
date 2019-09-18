@@ -706,7 +706,7 @@ public class TypeSetDissecter {
 				return new Comparator<GenericEntity>() {
 					@Override
 					public int compare(GenericEntity o1, GenericEntity o2) {
-						int diff = compareBy(o1, o2, o1.getCurrentType().getIdField().getName());
+						int diff = compareBy(o1, o2, o1.getType().getIdField().getName());
 						if (diff < 0)
 							return -1;
 						else if (diff > 0)

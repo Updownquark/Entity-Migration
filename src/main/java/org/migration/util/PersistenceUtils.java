@@ -46,6 +46,7 @@ import org.migration.generic.EnumType;
 import org.migration.generic.EnumValue;
 import org.migration.generic.GenericEntity;
 import org.qommons.ArrayUtils;
+import org.qommons.StringUtils;
 import org.xml.sax.SAXException;
 
 /** Utilities used by the s4.persistence package */
@@ -74,7 +75,7 @@ public class PersistenceUtils {
         @Override
         public int compare(GenericEntity o1, GenericEntity o2) {
             for (String order : theListField.getSorting()) {
-                EntityField sortField = o1.getCurrentType().getField(order);
+                EntityField sortField = o1.getType().getField(order);
                 if (sortField == null) {
                     throw new IllegalStateException("Field " + sortField + " specified in ordering on field " + theListField
                             + " is not present in target entity type");
@@ -117,7 +118,7 @@ public class PersistenceUtils {
             if (o1 instanceof GenericEntity) {
                 GenericEntity e1 = (GenericEntity) o1;
                 GenericEntity e2 = (GenericEntity) o2;
-                return ((Comparable<Object>) e1.get(e1.getCurrentType().getIdField().getName())).compareTo(e2.get(e2.getCurrentType()
+                return ((Comparable<Object>) e1.get(e1.getType().getIdField().getName())).compareTo(e2.get(e2.getType()
                         .getIdField().getName()));
             } else {
                 return ((Comparable<Object>) o1).compareTo(o2);
@@ -194,21 +195,12 @@ public class PersistenceUtils {
      * @return The converted XML name
      */
     public static String javaToXml(String javaName) {
-        StringBuilder ret = new StringBuilder(javaName);
+		String ret = StringUtils.parseByCase(javaName).toKebabCase();
         if ((Character.isAlphabetic(ret.charAt(0)) || ret.charAt(0) == '_') && !javaName.toLowerCase().startsWith("xml")) {
         } else {
-			ret.insert(0, "_.");
+			ret = "_." + ret;
 		}
-        for (int i = 0; i < ret.length(); i++) {
-            if (Character.isUpperCase(ret.charAt(i))) {
-                if (i > 0) {
-                    ret.insert(i, '-');
-                    i++;
-                }
-                ret.setCharAt(i, Character.toLowerCase(ret.charAt(i)));
-            }
-        }
-        return ret.toString();
+		return ret;
     }
 
     /**
@@ -222,56 +214,7 @@ public class PersistenceUtils {
      * @return The converted java name
      */
     public static String xmlToJava(String xmlName, boolean type) {
-        StringBuilder ret = new StringBuilder(xmlName);
-        boolean cap = type;
-        for (int i = 0; i < ret.length(); i++) {
-            if (cap) {
-                ret.setCharAt(i, Character.toUpperCase(ret.charAt(i)));
-            }
-            if (ret.charAt(i) == '-') {
-                cap = true;
-                ret.deleteCharAt(i);
-                i--;
-            } else {
-                cap = false;
-            }
-        }
-        return ret.toString();
-    }
-
-    /**
-     * @param name
-     *            The plural name
-     * @return The singular of the given name
-     */
-    public static String singularize(String name) {
-        if (name.endsWith("eries")) {
-			return name;
-		}
-        if (name.endsWith("ies")) {
-            return name.substring(0, name.length() - 3) + "y";
-        } else if (name.endsWith("ses")) {
-            return name.substring(0, name.length() - 2);
-        } else if (name.endsWith("s")) {
-            return name.substring(0, name.length() - 1);
-        } else {
-            return name;
-        }
-    }
-
-    /**
-     * @param name
-     *            The singular name
-     * @return The plural of the given name
-     */
-    public static String pluralize(String name) {
-        if (name.endsWith("y")) {
-            name = name.substring(0, name.length() - 1) + "ie";
-        } else if (name.endsWith("s") || name.endsWith("x") || name.endsWith("ch")) {
-            name += "e";
-        }
-        name += "s";
-        return name;
+		return StringUtils.split(xmlName, '-').toPascalCase();
     }
 
     /**
@@ -433,8 +376,8 @@ public class PersistenceUtils {
             if (type instanceof Class<?>) {
                 if (!isConvertible(type, value.getClass())) {
                     if (value instanceof GenericEntity) {
-                        if (!getElementNameFromClass(toString(type)).equals(((GenericEntity) value).getCurrentType().getName())) {
-                            throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getCurrentType().getName()
+                        if (!getElementNameFromClass(toString(type)).equals(((GenericEntity) value).getType().getName())) {
+                            throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getType().getName()
                                     + " is not valid for field " + entity.getName() + "." + name + " (type "
                                     + PersistenceUtils.toString(type) + ")");
                         }
@@ -454,8 +397,8 @@ public class PersistenceUtils {
                 }
             } else if (type instanceof EntityType) {
                 if (value instanceof GenericEntity) {
-                    if (!((EntityType) type).isAssignableFrom(((GenericEntity) value).getCurrentType())) {
-                        throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getCurrentType().getName()
+                    if (!((EntityType) type).isAssignableFrom(((GenericEntity) value).getType())) {
+                        throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getType().getName()
                                 + " is not valid for field " + entity.getName() + "." + name + " (type " + PersistenceUtils.toString(type)
                                 + ")");
                     }
@@ -501,7 +444,7 @@ public class PersistenceUtils {
                 }
             } else if (type instanceof NotFoundType) {
                 if (!(value instanceof GenericEntity)
-                        || !((GenericEntity) value).getCurrentType().getName().equals(((NotFoundType) type).name)) {
+                        || !((GenericEntity) value).getType().getName().equals(((NotFoundType) type).name)) {
                     throw new IllegalArgumentException("Value of type " + value.getClass().getName() + " is not valid for field "
                             + entity.getName() + "." + name + " (type " + PersistenceUtils.toString(type) + ")");
                 }

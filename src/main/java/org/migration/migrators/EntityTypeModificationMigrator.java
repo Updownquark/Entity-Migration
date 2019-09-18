@@ -35,7 +35,7 @@ public abstract class EntityTypeModificationMigrator implements EntityMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
         return oldVersionEntity;
     }
 }

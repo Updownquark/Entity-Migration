@@ -6,7 +6,6 @@ import java.util.NoSuchElementException;
 import java.util.SortedSet;
 
 import org.migration.MigrationSet;
-import org.migration.TypeSetDissecter;
 import org.migration.migrators.EntityMigrator;
 import org.migration.migrators.EntityTypeModificationMigrator;
 
@@ -100,27 +99,6 @@ public class MigrationUtil {
                 }
             }
             types.setVersionDate(migSet.getDate());
-        }
-    }
-
-    /**
-     * Transitions a set of entities to another version
-     *
-     * @param entities
-     *            The entities to transition
-     * @param toVersionDate
-     *            The version to transition the entities to
-     * @param versionSupport
-     *            The version support to get the migrations from
-     * @param dissecter
-     *            The dissecter to understand data types
-     */
-    public static void transition(GenericEntitySet entities, Date toVersionDate, EntityVersionSupport versionSupport, TypeSetDissecter dissecter) {
-        if (toVersionDate.compareTo(entities.getOldTypes().getVersionDate()) < 0) {
-            throw new IllegalArgumentException("Cannot migrate entity sets backward");
-        }
-        for (MigrationSet migSet : getMigration(entities.getOldTypes().getVersionDate(), toVersionDate, versionSupport)) {
-            entities.migrate(migSet, dissecter);
         }
     }
 }

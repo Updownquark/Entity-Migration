@@ -20,7 +20,7 @@ public class EntityRemovedMigrator extends EntityTypeModificationMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
         return null;
     }
 

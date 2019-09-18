@@ -26,11 +26,11 @@ public class EnumStringMigrator extends JavaMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
-        EntityField fromField = oldVersionEntity.getCurrentType().getField(theFromField);
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+        EntityField fromField = oldVersionEntity.getType().getField(theFromField);
         if (fromField == null)
             throw new IllegalStateException("No such field " + getEntityName() + "." + theFromField);
-        EntityField toField = oldVersionEntity.getCurrentType().getField(theToField);
+        EntityField toField = oldVersionEntity.getType().getField(theToField);
         if (toField == null)
             throw new IllegalStateException("No such field " + getEntityName() + "." + theToField);
         if (String.class == fromField.getType()) {
@@ -51,7 +51,7 @@ public class EnumStringMigrator extends JavaMigrator {
         return oldVersionEntity;
     }
 
-    private EnumValue parseEnumValue(EnumType type, String name) {
+	private static EnumValue parseEnumValue(EnumType type, String name) {
         if (name == null)
             return null;
         EnumValue value = type.getValue(name);

@@ -39,6 +39,7 @@ import org.migration.generic.EntityVersionSupport;
 import org.migration.generic.EnumDifference;
 import org.migration.generic.EnumType;
 import org.migration.generic.GenericEntity;
+import org.migration.generic.SimpleGenericEntitySet;
 import org.migration.generic.GenericEntitySet;
 import org.migration.generic.MigratorFactory;
 import org.migration.util.HibernateExtractionUtil;
@@ -105,7 +106,7 @@ public class EntityMigration {
          *            The entity set being migrated
          * @return All migrations that the entity set has already had applied
          */
-        List<MigrationSet> getLoggedMigrations(GenericEntitySet entitySet);
+		List<MigrationSet> getLoggedMigrations(GenericEntitySet entitySet);
 
         /**
          * @param entitySet
@@ -113,7 +114,7 @@ public class EntityMigration {
          * @param migration
          *            The migration to save to the entity set
          */
-        void logMigration(GenericEntitySet entitySet, MigrationSet migration);
+		void logMigration(GenericEntitySet entitySet, MigrationSet migration);
     }
 
     private final Set<String> theDataSetTags;
@@ -126,7 +127,7 @@ public class EntityMigration {
     private EntityVersionSupport theVersion;
     private Predicate<Object> theEntityFilter;
     private EntitySet theRealEntities;
-    private GenericEntitySet theGenericEntities;
+	private GenericEntitySet theGenericEntities;
 
     /**
      * Creates the migrator utility
@@ -155,7 +156,7 @@ public class EntityMigration {
     }
 
     /** @return The generic entity set that has been populated in this migrator, if any */
-    public GenericEntitySet getGenericEntities() {
+	public GenericEntitySet getGenericEntities() {
         return theGenericEntities;
     }
 
@@ -369,7 +370,7 @@ public class EntityMigration {
             return null;
         }
 
-        GenericEntitySet entitySet = new GenericEntitySet(theVersion.getCurrentTypeSet().clone());
+		GenericEntitySet entitySet = new SimpleGenericEntitySet(theVersion.getCurrentTypeSet().clone());
 		EntitySetPersister persister = new EntitySetPersister(thePersistence);
         boolean success = persister.read(entitySet, reader);
         if (!success) {
@@ -392,7 +393,7 @@ public class EntityMigration {
 		}
 
         EntitySetConverter converter = new EntitySetConverter(theDissecter, theEntityTypes).setFilter(theEntityFilter);
-        theGenericEntities = converter.exportEntities(theRealEntities);
+		theGenericEntities = converter.exportEntities(theRealEntities, SimpleGenericEntitySet::new);
         return this;
     }
 
@@ -434,10 +435,10 @@ public class EntityMigration {
         }
 
         for (Map.Entry<Class<?>, EntityType> entry : theVersion.getCurrentTypeSet().getEntityMappings()) {
-			theGenericEntities.getCurrentTypes().map(entry.getKey(), entry.getValue());
+			theGenericEntities.getTypes().map(entry.getKey(), entry.getValue());
 		}
         for (Map.Entry<Class<? extends Enum<?>>, EnumType> entry : theVersion.getCurrentTypeSet().getEnumMappings()) {
-			theGenericEntities.getCurrentTypes().map(entry.getKey(), entry.getValue());
+			theGenericEntities.getTypes().map(entry.getKey(), entry.getValue());
 		}
 
         EntitySetConverter converter = new EntitySetConverter(theDissecter, theEntityTypes);
@@ -467,7 +468,7 @@ public class EntityMigration {
 
 		EntitySetPersister persister = new EntitySetPersister(thePersistence);
         try {
-            writeVersion(theGenericEntities.getCurrentTypes(), new OutputStreamWriter(writer.writeResource("Entity Versions.xml")));
+            writeVersion(theGenericEntities.getTypes(), new OutputStreamWriter(writer.writeResource("Entity Versions.xml")));
         } catch (IllegalStateException e) {
             throw new IllegalStateException("Could not save types", e);
         }
@@ -603,20 +604,20 @@ public class EntityMigration {
      * @param entities
      *            The entity set to populate the mapping values and collections of
      */
-    public static void populateMappedData(GenericEntitySet entities) {
+	public static void populateMappedData(GenericEntitySet entities) {
         System.out.println("\nLinking up mapped entities");
-        for (EntityType type : entities.getCurrentTypes()) {
+        for (EntityType type : entities.getTypes()) {
 			for (EntityField field : type) {
                 if (field.getDeclaringType() != type || field.getMappingField() == null) {
 					continue;
 				}
-                EntityField refField = PersistenceUtils.getMappedField(field, entities.getCurrentTypes());
+                EntityField refField = PersistenceUtils.getMappedField(field, entities.getTypes());
                 System.out.println("\tLinking " + refField.entity + " instances into " + field.entity + "." + field.getName());
                 if (field.getType() instanceof EntityType) {
                     boolean allFound = true;
-                    for (GenericEntity entity : entities.get(type.getName())) {
+					for (GenericEntity entity : entities.queryAll(type.getName())) {
                         boolean found = false;
-                        for (GenericEntity refEntity : entities.get(refField.entity.getName())) {
+						for (GenericEntity refEntity : entities.queryAll(refField.entity.getName())) {
 							if (refEntity.get(refField.getName()) == entity) {
                                 entity.set(field.getName(), refEntity);
                                 found = true;
@@ -632,7 +633,7 @@ public class EntityMigration {
                                 + " could not be linked");
 					}
                 } else {
-					for (GenericEntity entity : entities.get(type.getName())) {
+					for (GenericEntity entity : entities.queryAll(type.getName())) {
                         Collection<GenericEntity> collection = (Collection<GenericEntity>) entity.get(field.getName());
                         if (collection == null) {
                             Type raw = ((ParameterizedType) field.getType()).getRawType();
@@ -660,7 +661,7 @@ public class EntityMigration {
                             entity.set(field.getName(), collection);
                         }
 
-                        for (GenericEntity refEntity : entities.get(refField.entity.getName())) {
+						for (GenericEntity refEntity : entities.queryAll(refField.entity.getName())) {
 							if (refEntity.get(refField.getName()) == entity) {
 								collection.add(refEntity);
 							}

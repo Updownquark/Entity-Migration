@@ -31,6 +31,7 @@ import org.migration.generic.EnumType;
 import org.migration.generic.EnumValue;
 import org.migration.generic.GenericEntity;
 import org.migration.generic.GenericEntitySet;
+import org.qommons.StringUtils;
 import org.qommons.io.HierarchicalResourceReader;
 
 /** Reads and writes entities from/to XML files */
@@ -145,7 +146,7 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 			try {
 				theXmlWriter.writeCharacters(indent());
 				theXmlWriter.writeEmptyElement(fieldName);
-				theXmlWriter.writeAttribute(value.getCurrentType().getIdField().getName(), serializedId);
+				theXmlWriter.writeAttribute(value.getType().getIdField().getName(), serializedId);
 			} catch (XMLStreamException e) {
 				throw new IOException("XML output exception", e);
 			}
@@ -234,7 +235,7 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 				theXmlWriter.writeCharacters(indent);
 				String childName;
 				if (field.getType() == collectionType) {
-					childName = PersistenceUtils.singularize(fieldName);
+					childName = StringUtils.singularize(fieldName);
 				} else {
 					childName = cd.getElementName(); // A sub-field
 				}
@@ -303,7 +304,7 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 
 			Object[] fieldValue = new Object[1];
 			for (Attribute att : element.getAttributes()) {
-				EntityField field = item.getCurrentType().getField(att.getName());
+				EntityField field = item.getType().getField(att.getName());
 				if (!isSimpleField(field.getName(), field.getType(), getDissecter()) || field.isId()) {
 					continue;
 				}
@@ -318,10 +319,10 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 				item.set(field.getName(), fieldValue[0]);
 			}
 			for (Element fieldEl : element.getChildren()) {
-				EntityField field = item.getCurrentType().getField(fieldEl.getName());
+				EntityField field = item.getType().getField(fieldEl.getName());
 				if (field == null) {
 					throw new IllegalStateException(
-							"Bad serialized data: No such field " + item.getCurrentType() + "." + fieldEl.getName());
+							"Bad serialized data: No such field " + item.getType() + "." + fieldEl.getName());
 				}
 				boolean fieldSuccess = getValue(fieldEl, fieldValue, field.getType(), field, entities);
 				if (fieldSuccess) {
@@ -359,7 +360,7 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 					e.printStackTrace();
 					return false;
 				}
-				fieldValue[0] = entitySet.get(((EntityType) type).getName(), idValue);
+				fieldValue[0] = entitySet.queryById((EntityType) type, idValue);
 				if (fieldValue[0] == null) {
 					System.err.println("No such " + type + " with " + idField.getName() + " " + idValue + " for " + field);
 					return false;
@@ -465,7 +466,7 @@ public class XmlEntitySetPersistence extends AbstractTextEntitySetPersistence {
 
 	@Override
 	protected EntityWriter createEntityWriter(EntityType type, Writer streamWriter) throws IOException {
-		String rootName = PersistenceUtils.pluralize(type.getName());
+		String rootName = StringUtils.pluralize(type.getName());
 		return new XmlEntityWriter(type, getDissecter(), streamWriter, theXml, rootName);
 	}
 

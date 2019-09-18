@@ -63,7 +63,8 @@ public class DefaultFieldValueMigrator extends FieldValueMigrator {
     }
 
     @Override
-    protected Object getFieldValue(GenericEntity oldVersionEntity, EntityField field, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	protected Object getFieldValue(GenericEntity oldVersionEntity, EntityField field, GenericEntitySet allEntities,
+		TypeSetDissecter dissecter) {
 		return createDefaultValue(field.getType(), allEntities, dissecter, theValue);
     }
 
@@ -96,7 +97,7 @@ public class DefaultFieldValueMigrator extends FieldValueMigrator {
 			} catch (RuntimeException e) {
 				throw new IllegalStateException("Could not parse " + idField + " from " + value);
 			}
-			GenericEntity ret = allEntities.get(((EntityType) type).getName(), idValue);
+			GenericEntity ret = allEntities.queryById((EntityType) type, idValue);
 			if (ret == null) {
 				throw new IllegalStateException("No such " + type + " with " + idField.getName() + " " + idValue);
 			}

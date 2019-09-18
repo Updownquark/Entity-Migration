@@ -40,10 +40,10 @@ public class FieldValueMap extends JavaMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
-        EntityField field = oldVersionEntity.getCurrentType().getField(theField);
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+        EntityField field = oldVersionEntity.getType().getField(theField);
         if (field == null) {
-			throw new IllegalStateException("No such field " + oldVersionEntity.getCurrentType() + "." + theField);
+			throw new IllegalStateException("No such field " + oldVersionEntity.getType() + "." + theField);
 		}
         if (field.getType() instanceof EntityType) {
 			throw new IllegalStateException("Cannot map entity fields: " + field);

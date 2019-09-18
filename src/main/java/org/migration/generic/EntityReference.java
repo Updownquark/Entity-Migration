@@ -124,7 +124,7 @@ public class EntityReference {
      *            Whether to include entity that contain the given entity in a collection field
      * @return All entities in the entity set that contain a reference to the given entity
      */
-    public Collection<GenericEntity> getReferring(GenericEntity entity, GenericEntitySet entitySet, boolean withDirectRefs,
+	public Collection<GenericEntity> getReferring(GenericEntity entity, GenericEntitySet entitySet, boolean withDirectRefs,
             boolean withCollectionRefs) {
         if (!(getReferenceType() instanceof EntityType))
             throw new IllegalStateException("This method may only be called if the reference type is an entity, not an enum");
@@ -134,9 +134,9 @@ public class EntityReference {
             return Collections.EMPTY_LIST;
 
         EntityType refType = (EntityType) getReferenceType();
-        if (!refType.isAssignableFrom(entity.getCurrentType()))
-            throw new IllegalArgumentException(entity.getCurrentType() + " is not a subtype of this reference (" + refType + ")");
-        if (!refType.isAssignableFrom(entity.getCurrentType()))
+        if (!refType.isAssignableFrom(entity.getType()))
+            throw new IllegalArgumentException(entity.getType() + " is not a subtype of this reference (" + refType + ")");
+        if (!refType.isAssignableFrom(entity.getType()))
             return Collections.EMPTY_LIST;
         if (theReverseMappingField != null) {
             if (theReverseMappingField.getType() instanceof EntityType)
@@ -155,25 +155,22 @@ public class EntityReference {
                         return Collections.EMPTY_LIST;
                 }
             throw new IllegalStateException("No such mapping field found: " + refType + "." + theReference.getMappingField());
+		} else if (theReference.getType() instanceof EntityType) {
+			return entitySet.query(theReference, entity);
         } else {
             ArrayList<GenericEntity> ret = new ArrayList<>();
-            for (GenericEntity e : entitySet.get(theReference.getDeclaringType().getName()))
-                if (theReference.getType() instanceof EntityType) {
-                    GenericEntity fieldValue = e.getEntity(theReference.getName());
-                    if (fieldValue != null && fieldValue.equals(entity))
+			for (GenericEntity e : entitySet.queryAll(theReference.getDeclaringType().getName())) {
+				ParameterizedType type = (ParameterizedType) theReference.getType();
+				Class<?> raw = (Class<?>) type.getRawType();
+				if (Collection.class.isAssignableFrom(raw)) {
+					if (((Collection<GenericEntity>) e.get(theReference.getName())).contains(entity))
                         ret.add(e);
-                } else {
-                    ParameterizedType type = (ParameterizedType) theReference.getType();
-                    Class<?> raw = (Class<?>) type.getRawType();
-                    if (Collection.class.isAssignableFrom(raw)) {
-                        if (((Collection<GenericEntity>) e.get(theReference.getName())).contains(entity))
-                            ret.add(e);
-                    } else if (isMapKey) {
-                        if (((Map<GenericEntity, ?>) e.get(theReference.getName())).containsKey(entity))
-                            ret.add(e);
-                    } else if (((Map<?, GenericEntity>) e.get(theReference.getName())).containsValue(entity))
+				} else if (isMapKey) {
+					if (((Map<GenericEntity, ?>) e.get(theReference.getName())).containsKey(entity))
                         ret.add(e);
-                }
+				} else if (((Map<?, GenericEntity>) e.get(theReference.getName())).containsValue(entity))
+					ret.add(e);
+			}
             return Collections.unmodifiableList(ret);
         }
     }
@@ -189,7 +186,7 @@ public class EntityReference {
      *            Whether to include entity that contain the given entity in a collection field
      * @return All entities in the entity set that contain a reference to the given entity
      */
-    public Collection<GenericEntity> getReferring(EnumValue value, GenericEntitySet entitySet, boolean withDirectRefs,
+	public Collection<GenericEntity> getReferring(EnumValue value, GenericEntitySet entitySet, boolean withDirectRefs,
             boolean withCollectionRefs) {
         if (!(getReferenceType() instanceof EnumType))
             throw new IllegalStateException("This method may only be called if the reference type is an enum, not an entity");
@@ -203,23 +200,20 @@ public class EntityReference {
             return Collections.EMPTY_LIST;
 
         ArrayList<GenericEntity> ret = new ArrayList<>();
-        for (GenericEntity e : entitySet.get(theReference.getDeclaringType().getName()))
-            if (theReference.getType() instanceof EnumType) {
-                EnumValue fieldValue = e.getEnum(theReference.getName());
-                if (fieldValue != null && fieldValue.equals(value))
+		if (theReference.getType() instanceof EnumType)
+			return entitySet.query(theReference, value);
+		for (GenericEntity e : entitySet.queryAll(theReference.getDeclaringType().getName())) {
+			ParameterizedType type = (ParameterizedType) theReference.getType();
+			Class<?> raw = (Class<?>) type.getRawType();
+			if (Collection.class.isAssignableFrom(raw)) {
+				if (((Collection<EnumValue>) e.get(theReference.getName())).contains(value))
                     ret.add(e);
-            } else {
-                ParameterizedType type = (ParameterizedType) theReference.getType();
-                Class<?> raw = (Class<?>) type.getRawType();
-                if (Collection.class.isAssignableFrom(raw)) {
-                    if (((Collection<EnumValue>) e.get(theReference.getName())).contains(value))
-                        ret.add(e);
-                } else if (isMapKey) {
-                    if (((Map<EnumValue, ?>) e.get(theReference.getName())).containsKey(value))
-                        ret.add(e);
-                } else if (((Map<?, EnumValue>) e.get(theReference.getName())).containsValue(value))
+			} else if (isMapKey) {
+				if (((Map<EnumValue, ?>) e.get(theReference.getName())).containsKey(value))
                     ret.add(e);
-            }
+			} else if (((Map<?, EnumValue>) e.get(theReference.getName())).containsValue(value))
+				ret.add(e);
+		}
         return Collections.unmodifiableList(ret);
     }
 
@@ -233,14 +227,14 @@ public class EntityReference {
      * @return Whether the given referring entity will need to be deleted in order to delete the reference (one-to-one relationship)
      */
     public boolean delete(GenericEntity entity, GenericEntity toDelete) {
-        if (!theReference.entity.isAssignableFrom(entity.getCurrentType()))
-            throw new IllegalArgumentException(entity.getCurrentType() + " is not a subtype of this reference's referrer ("
+        if (!theReference.entity.isAssignableFrom(entity.getType()))
+            throw new IllegalArgumentException(entity.getType() + " is not a subtype of this reference's referrer ("
                     + theReference.entity + ")");
         if (!(getReferenceType() instanceof EntityType))
             throw new IllegalStateException("This method may only be called if the reference type is an entity, not an enum");
         EntityType refType = (EntityType) getReferenceType();
-        if (!refType.isAssignableFrom(toDelete.getCurrentType()))
-            throw new IllegalArgumentException(toDelete.getCurrentType() + " is not a subtype of this reference (" + refType + ")");
+        if (!refType.isAssignableFrom(toDelete.getType()))
+            throw new IllegalArgumentException(toDelete.getType() + " is not a subtype of this reference (" + refType + ")");
         if (theReference.getType() instanceof EntityType) {
             GenericEntity fieldValue = entity.getEntity(theReference.getName());
             return fieldValue != null && fieldValue.equals(toDelete);
@@ -274,9 +268,9 @@ public class EntityReference {
      * @return Whether the given referring entity will need to be deleted in order to delete the reference (one-to-one relationship)
      */
     public boolean delete(GenericEntity entity, EnumValue toDelete) {
-        if (!theReference.entity.isAssignableFrom(entity.getCurrentType()))
+        if (!theReference.entity.isAssignableFrom(entity.getType()))
             throw new IllegalArgumentException(
-                    entity.getCurrentType() + " is not a subtype of this reference's referrer (" + theReference.entity + ")");
+                    entity.getType() + " is not a subtype of this reference's referrer (" + theReference.entity + ")");
         if (!(getReferenceType() instanceof EnumType))
             throw new IllegalStateException("This method may only be called if the reference type is an enum, not an entity");
         EnumType refType = (EnumType) getReferenceType();
@@ -322,13 +316,13 @@ public class EntityReference {
         if (!(getReferenceType() instanceof EntityType))
             throw new IllegalStateException("This method may only be called if the reference type is an entity, not an enum");
         EntityType type = (EntityType) getReferenceType();
-        if (!theReference.entity.isAssignableFrom(entity.getCurrentType()))
-            throw new IllegalArgumentException(entity.getCurrentType() + " is not a subtype of this reference's referrer ("
+        if (!theReference.entity.isAssignableFrom(entity.getType()))
+            throw new IllegalArgumentException(entity.getType() + " is not a subtype of this reference's referrer ("
                     + theReference.entity + ")");
-        if (!type.isAssignableFrom(toReplace.getCurrentType()))
-            throw new IllegalArgumentException(toReplace.getCurrentType()+" is not a subtype of this reference ("+type+")");
-        else if(!type.isAssignableFrom(replacement.getCurrentType()))
-            throw new IllegalArgumentException(replacement.getCurrentType()+" is not a subtype of this reference ("+type+")");
+        if (!type.isAssignableFrom(toReplace.getType()))
+            throw new IllegalArgumentException(toReplace.getType()+" is not a subtype of this reference ("+type+")");
+        else if(!type.isAssignableFrom(replacement.getType()))
+            throw new IllegalArgumentException(replacement.getType()+" is not a subtype of this reference ("+type+")");
 
         if (theReference.getType() instanceof EntityType) {
             GenericEntity fieldValue = entity.getEntity(theReference.getName());
@@ -376,9 +370,9 @@ public class EntityReference {
         if (!(getReferenceType() instanceof EnumType))
             throw new IllegalStateException("This method may only be called if the reference type is an enum, not an entity");
         EnumType type = (EnumType) getReferenceType();
-        if (!theReference.entity.isAssignableFrom(entity.getCurrentType()))
+        if (!theReference.entity.isAssignableFrom(entity.getType()))
             throw new IllegalArgumentException(
-                    entity.getCurrentType() + " is not a subtype of this reference's referrer (" + theReference.entity + ")");
+                    entity.getType() + " is not a subtype of this reference's referrer (" + theReference.entity + ")");
         if (!type.equals(toReplace.getEnumType()))
             throw new IllegalArgumentException(toReplace.getEnumType() + " is not an instance of this reference type (" + type + ")");
         else if (!type.equals(replacement.getEnumType()))

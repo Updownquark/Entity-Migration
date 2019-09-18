@@ -154,7 +154,7 @@ public class MigratorFactory {
      *            The comma-delimited string to split
      * @return The trimmed string values in the comma-delimited joined value
      */
-    public static String[] split(String sorting) {
+	public static String[] split(String sorting) {
         if (sorting == null || sorting.length() == 0) {
 			return new String[0];
 		}
@@ -162,7 +162,7 @@ public class MigratorFactory {
         for (int i = 0; i < sortCols.length; i++) {
 			sortCols[i] = sortCols[i].trim();
 		}
-        return sortCols;
+		return sortCols;
     }
 
     /**

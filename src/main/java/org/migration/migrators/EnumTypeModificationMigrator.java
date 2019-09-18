@@ -39,7 +39,7 @@ public abstract class EnumTypeModificationMigrator implements EntityMigrator {
      * set
      */
     @Override
-    public final GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public final GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
         return oldVersionEntity;
     }
 }

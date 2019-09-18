@@ -1,7 +1,7 @@
 package org.migration;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -41,7 +41,7 @@ public class EntitySetPersister {
 	public boolean save(GenericEntitySet entitySet, HierarchicalResourceWriter writer, Consumer<EntityType> inProgressMonitor,
 			Consumer<EntityType> finishedMonitor) {
         boolean success = true;
-        for (EntityType type : entitySet.getCurrentTypes()) {
+        for (EntityType type : entitySet.getTypes()) {
             if (inProgressMonitor != null) {
 				inProgressMonitor.accept(type);
 			}
@@ -62,14 +62,14 @@ public class EntitySetPersister {
 	 *            The serial persistence interface to read the XML from
 	 * @return Whether the parsing was completely successful
 	 */
-    public boolean read(GenericEntitySet entitySet, HierarchicalResourceReader reader) {
+	public boolean read(GenericEntitySet entitySet, HierarchicalResourceReader reader) {
         boolean success = true;
         // Create all the entities first, so we can link them up during the field-parsing
-        for (EntityType type : entitySet.getCurrentTypes()) {
+        for (EntityType type : entitySet.getTypes()) {
 			success &= createEntitiesFromExport(entitySet, type, reader);
 		}
         // Parse and populate all the field values
-        for (EntityType type : entitySet.getCurrentTypes()) {
+        for (EntityType type : entitySet.getTypes()) {
 			success &= importFieldValues(entitySet, type, reader);
 		}
         return success;
@@ -79,9 +79,9 @@ public class EntitySetPersister {
 		int success = 0;
 		int total;
 		try (EntityWriter entityPersister = thePersistence.writeEntitySet(type, writer)) {
-            List<GenericEntity> beans = entitySet.get(type.getName());
+			Collection<GenericEntity> beans = entitySet.queryAll(type);
             // Filter out sub-types
-            beans = beans.stream().filter(bean -> bean.getCurrentType().getName().equals(type.getName())).collect(Collectors.toList());
+            beans = beans.stream().filter(bean -> bean.getType().getName().equals(type.getName())).collect(Collectors.toList());
 			total = beans.size();
 			for (GenericEntity bean : beans) {
 				if (entityPersister.writeEntity(bean)) {
@@ -103,7 +103,7 @@ public class EntitySetPersister {
         return success == total;
     }
 
-    private boolean createEntitiesFromExport(GenericEntitySet entitySet, EntityType type, HierarchicalResourceReader reader) {
+	private boolean createEntitiesFromExport(GenericEntitySet entitySet, EntityType type, HierarchicalResourceReader reader) {
 		try {
 			EntityReader entityReader = thePersistence.readEntitySet(type, reader);
 			return entityReader.readEntityIdentities(entitySet, null);

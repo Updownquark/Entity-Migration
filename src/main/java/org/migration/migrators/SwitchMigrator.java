@@ -69,7 +69,7 @@ public class SwitchMigrator extends JavaMigrator {
 		for (EntityMigrator migrator : caseMigrators) {
 			GenericEntity newReplacement = migrator.migrate(replacement, allEntities, dissecter);
 			if (newReplacement != replacement && replacement != oldVersionEntity)
-				allEntities.removeEntity(replacement);
+				allEntities.remove(replacement);
 			replacement = newReplacement;
 		}
 		return replacement;

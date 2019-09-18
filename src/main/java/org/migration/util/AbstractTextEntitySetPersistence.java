@@ -77,7 +77,7 @@ public abstract class AbstractTextEntitySetPersistence implements EntitySetPersi
 				return true;
 			}
 			if (fieldValue instanceof GenericEntity) {
-				String idField = ((GenericEntity) fieldValue).getCurrentType().getIdField().getName();
+				String idField = ((GenericEntity) fieldValue).getType().getIdField().getName();
 				Object id = ((GenericEntity) fieldValue).get(idField);
 				SimpleFormat format = theDissecter.getFormat(id.getClass());
 				writeReference(fieldName, (GenericEntity) fieldValue, format.format(id));
@@ -231,7 +231,7 @@ public abstract class AbstractTextEntitySetPersistence implements EntitySetPersi
 							SimpleFormat idFormat = theDissecter.getFormat((Class<?>) idField.getType());
 							idValue = idFormat.parse((Class<?>) idField.getType(), idString);
 
-							GenericEntity duplicate = entities.get(theType.getName(), idValue);
+							GenericEntity duplicate = entities.queryById(theType, idValue);
 							if (duplicate != null && duplicate != item) {
 								System.err.println(
 										"Duplicate " + theType.getName() + " instances found with " + idField.getName() + " " + idValue);
@@ -252,7 +252,7 @@ public abstract class AbstractTextEntitySetPersistence implements EntitySetPersi
 						}
 
 						if (!itemSuccess) {
-							entities.removeEntity(item);
+							entities.remove(item);
 						}
 						if (itemSuccess && onEntity != null) {
 							onEntity.accept(item);
@@ -302,7 +302,7 @@ public abstract class AbstractTextEntitySetPersistence implements EntitySetPersi
 							return; // Presumably, we caught this the last time
 						}
 
-						GenericEntity item = entities.get(theType.getName(), idValue);
+						GenericEntity item = entities.queryById(theType, idValue);
 						boolean itemSuccess = deserializeFieldsFor(item, element, entities);
 						if (itemSuccess && onCompleteEntity != null) {
 							onCompleteEntity.accept(item);

@@ -69,8 +69,8 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
             // ID fields need to be the same
             EntityField oldId = getIdField();
             EntityField newId = superType.getIdField();
-            if (oldId.getName().equals(newId.getName()) && oldId.getType().equals(newId.getType())
-                    && oldId.isNullable() == newId.isNullable() && ArrayUtils.equals(oldId.getSorting(), newId.getSorting())) {
+			if (oldId.getName().equals(newId.getName()) && oldId.getType().equals(newId.getType())
+				&& oldId.isNullable() == newId.isNullable() && ArrayUtils.equals(oldId.getSorting(), newId.getSorting())) {
             } else {
 				throw new IllegalArgumentException("Replacement super-type's ID field must be the same as this type");
 			}
@@ -94,8 +94,8 @@ public class EntityType implements Type, Iterable<EntityField>, Cloneable {
 		} else {
 			// Can't not have an ID
 			theIdField = addField(theSuperType.getIdField().getName(), theSuperType.getIdField().getType(),
-					theSuperType.getIdField().isNullable(), theSuperType.getIdField().getMappingField(),
-					theSuperType.getIdField().getSorting());
+				theSuperType.getIdField().isNullable(), theSuperType.getIdField().getMappingField(),
+				theSuperType.getIdField().getSorting());
         }
         EntityField[] oldSuperFields = theSuperType == null ? new EntityField[0]
                 : theSuperType.theFields.values().toArray(new EntityField[0]);

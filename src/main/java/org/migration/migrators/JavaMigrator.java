@@ -6,8 +6,6 @@ import org.migration.MigrationSet;
 import org.migration.TypeSetDissecter;
 import org.migration.generic.EntityType;
 import org.migration.generic.EntityTypeSet;
-import org.migration.generic.GenericEntity;
-import org.migration.generic.GenericEntitySet;
 import org.migration.generic.MigratorFactory;
 
 /** Migrates entities with custom java code */
@@ -59,9 +57,6 @@ public abstract class JavaMigrator implements CustomMigrator {
     public MigrationSet getMigration() {
         return theMigration;
     }
-
-    @Override
-    public abstract GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter);
 
     @Override
     public Element serialize() {

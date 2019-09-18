@@ -1,4 +1,4 @@
-package org.migration.generic;
+	package org.migration.generic;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import org.jdom2.Element;
@@ -28,6 +29,11 @@ import org.migration.migrators.EnumTypeModificationMigrator;
  */
 public class EntityVersionSupport {
     private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("ddMMMyyyy HH:mm:ss.SSS");
+	private static SimpleDateFormat LOCAL_DATE_FORMAT = new SimpleDateFormat("ddMMMyyyy HH:mm:ss.SSS z");
+	static {
+		DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+		LOCAL_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
 
     private EntityTypeSet theCurrentTypes;
 
@@ -234,8 +240,12 @@ public class EntityVersionSupport {
         } catch (NullPointerException e) {
             throw new IllegalStateException("date attribute missing for migration by " + author);
         } catch (ParseException e) {
+			try {
+				date = LOCAL_DATE_FORMAT.parse(migrationSetEl.getAttributeValue("date"));
+			} catch (ParseException e2) {
             throw new IllegalStateException(
                     "date attribute malformatted for migration by " + author + ": " + migrationSetEl.getAttributeValue("date"), e);
+        }
         }
         MigrationDef preSet = theMigrationSets.floor(new MigrationDef(author, date));
         if (preSet != null && preSet.getDate().equals(date) && preSet.getAuthor().equals(author)) {
@@ -294,7 +304,7 @@ public class EntityVersionSupport {
                     theCurrentTypes.migrate((EnumTypeModificationMigrator) migrator, true);
                 }
             }
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | IllegalArgumentException e) {
             IllegalStateException copy = new IllegalStateException(migSet + ": " + e.getMessage(), e.getCause());
             copy.setStackTrace(e.getStackTrace());
             throw copy;

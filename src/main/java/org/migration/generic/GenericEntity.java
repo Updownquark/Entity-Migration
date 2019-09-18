@@ -11,30 +11,32 @@ import org.migration.util.PersistenceUtils;
 
 /** A typed set of fields and their data */
 public class GenericEntity {
-    private final EntityType theOldType;
-    private final EntityType theCurrentType;
-    private final GenericEntitySet theEntitySet;
+	protected interface IdChangeListener {
+		void idChanged(GenericEntity entity, Object oldId, Object newId);
+	}
 
+	private final EntityType theType;
+	private final GenericEntitySet theEntitySet;
+
+	private final IdChangeListener theIdChange;
     private final Map<String, Object> theFieldMap;
 
     /**
-     * @param oldType
-     *            The type of the entity before the current migration
      * @param currentType
      *            The type of the entity at the current spot in the migration
      * @param entitySet
      *            The entity set that this GenericEntity belongs to
      */
-    GenericEntity(EntityType oldType, EntityType currentType, GenericEntitySet entitySet) {
-        theOldType = oldType;
-        theCurrentType = currentType;
+	protected GenericEntity(EntityType currentType, GenericEntitySet entitySet, IdChangeListener idChange) {
+		theType = currentType;
         theEntitySet = entitySet;
         theFieldMap = new java.util.TreeMap<>();
+		theIdChange = idChange;
     }
 
     /** @return The value of this entity's identity field */
     public Object getIdentity() {
-        EntityField field = theCurrentType.getIdField();
+		EntityField field = theType.getIdField();
         if (field == null)
             return null;
         return get(field.getName());
@@ -42,8 +44,8 @@ public class GenericEntity {
     }
 
     /** @return The type of the entity at the current spot in the migration */
-    public EntityType getCurrentType() {
-        return theCurrentType;
+    public EntityType getType() {
+		return theType;
     }
 
     /**
@@ -54,13 +56,13 @@ public class GenericEntity {
      *             If no field with the given name exists in the current version of this entity's type
      */
     public Object get(String field) {
-        if (theCurrentType.getField(field) == null && theOldType.getField(field) == null)
-            throw new IllegalArgumentException("No such field \"" + field + "\" for type " + theOldType.getName());
+		if (theType.getField(field) == null)
+			throw new IllegalArgumentException("No such field \"" + field + "\" for type " + theType.getName());
         return theFieldMap.get(field);
     }
 
     void setIdentityInternal(Object value) {
-        theFieldMap.put(theCurrentType.getIdField().getName(), value);
+		theFieldMap.put(theType.getIdField().getName(), value);
     }
 
     /**
@@ -75,13 +77,13 @@ public class GenericEntity {
      */
     public GenericEntity set(String field, Object value) {
         try {
-            theCurrentType.checkFieldValue(field, value);
+			theType.checkFieldValue(field, value);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid value for field " + theCurrentType + "." + field + ": " + e.getMessage(), e);
+			throw new IllegalArgumentException("Invalid value for field " + theType + "." + field + ": " + e.getMessage(), e);
         }
         Object oldValue = theFieldMap.put(field, value);
-        if (theCurrentType.getIdField() != null && field.equals(theCurrentType.getIdField().getName()))
-            theEntitySet.idChanged(this, oldValue, value);
+		if (theType.getIdField() != null && field.equals(theType.getIdField().getName()))
+			theIdChange.idChanged(this, oldValue, value);
         return this;
     }
 
@@ -194,11 +196,9 @@ public class GenericEntity {
      * @return The value of the given field, checked and cast as a collection of entities
      */
     public Collection<GenericEntity> getEntityCollection(String field) {
-        EntityField f = theCurrentType.getField(field);
+		EntityField f = theType.getField(field);
         if (f == null)
-            f = theOldType.getField(field);
-        if (f == null)
-            throw new IllegalArgumentException("No such field " + field + " for type " + theOldType.getName());
+			throw new IllegalArgumentException("No such field " + field + " for type " + theType.getName());
         Type type = f.getType();
         if (!(type instanceof ParameterizedType) || !Collection.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType()))
             throw new IllegalArgumentException(
@@ -215,11 +215,9 @@ public class GenericEntity {
      * @return The value of the given field, checked and cast as a list of entities
      */
     public List<GenericEntity> getEntityList(String field) {
-        EntityField f = theCurrentType.getField(field);
+		EntityField f = theType.getField(field);
         if (f == null)
-            f = theOldType.getField(field);
-        if (f == null)
-            throw new IllegalArgumentException("No such field " + field + " for type " + theOldType.getName());
+			throw new IllegalArgumentException("No such field " + field + " for type " + theType.getName());
         Type type = f.getType();
         if (!(type instanceof ParameterizedType) || !List.class.isAssignableFrom((Class<?>) ((ParameterizedType) type).getRawType()))
             throw new IllegalArgumentException("Field " + f + "'s type is " + PersistenceUtils.toString(type) + ", not a list of entities");
@@ -237,11 +235,11 @@ public class GenericEntity {
 	 * @return This entity
 	 */
 	public GenericEntity copyFrom(GenericEntity entity) {
-		boolean argIsSuper = entity.theCurrentType.isAssignableFrom(theCurrentType);
-		if (!argIsSuper && !theCurrentType.isAssignableFrom(entity.theCurrentType))
+		boolean argIsSuper = entity.theType.isAssignableFrom(theType);
+		if (!argIsSuper && !theType.isAssignableFrom(entity.theType))
 			throw new IllegalArgumentException("copyFrom may only be used on a related entity");
 
-		for (EntityField field : (argIsSuper ? entity.theCurrentType : theCurrentType)) {
+		for (EntityField field : (argIsSuper ? entity.theType : theType)) {
 			if (field.isId())
 				continue;
 			set(field.getName(), entity.get(field.getName()));
@@ -259,7 +257,7 @@ public class GenericEntity {
 
     @Override
     public int hashCode() {
-        int hash = getCurrentType().hashCode() * 17;
+        int hash = getType().hashCode() * 17;
         Object id = getIdentity();
         if (id == null)
             return hash;
@@ -270,12 +268,12 @@ public class GenericEntity {
     public boolean equals(Object obj) {
         if (obj == this)
             return true;
-        return obj instanceof GenericEntity && ((GenericEntity) obj).getCurrentType().equals(getCurrentType())
+        return obj instanceof GenericEntity && ((GenericEntity) obj).getType().equals(getType())
                 && Objects.equals(((GenericEntity) obj).getIdentity(), getIdentity());
     }
 
     @Override
     public String toString() {
-        return theCurrentType.getName() + " " + theCurrentType.getIdField().getName() + "=" + get(theCurrentType.getIdField().getName());
+		return theType.getName() + " " + theType.getIdField().getName() + "=" + get(theType.getIdField().getName());
     }
 }

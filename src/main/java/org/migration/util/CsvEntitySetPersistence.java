@@ -87,7 +87,7 @@ public class CsvEntitySetPersistence extends AbstractTextEntitySetPersistence {
 		protected void writeReference(String fieldName, GenericEntity value, String serializedId) throws IOException {
 			if (isSimpleField == 0) {
 				theValueWriter.write(serializedId);
-			} else if (isNumber(value.getCurrentType().getIdField().getType())) {
+			} else if (isNumber(value.getType().getIdField().getType())) {
 				theJsonWriter.writeNumber((Number) value.getIdentity());
 			} else {
 				theJsonWriter.writeString(serializedId);
@@ -301,7 +301,7 @@ public class CsvEntitySetPersistence extends AbstractTextEntitySetPersistence {
 				} else {
 					idValue = cast(serializedValue, (Class<?>) idField.getType());
 				}
-				fieldValue[0] = entitySet.get(((EntityType) type).getName(), idValue);
+				fieldValue[0] = entitySet.queryById(((EntityType) type), idValue);
 				if (fieldValue[0] == null) {
 					System.err.println("No such " + type + " with " + idField.getName() + " " + idValue + " for " + field);
 					return false;

@@ -55,14 +55,14 @@ public class EntitySetConverter {
     }
 
     /**
-     * @param entities
-     *            The real entities to export
-     * @return The exported generic entity set
-     */
-    public GenericEntitySet exportEntities(EntitySet entities) {
+	 * @param entities The real entities to export
+	 * @param createEntitySet Creates an entity set from a set of entity types
+	 * @return The exported generic entity set
+	 */
+	public GenericEntitySet exportEntities(EntitySet entities, Function<EntityTypeSet, GenericEntitySet> createEntitySet) {
         EntityTypeSet types = EntityTypeSet.createTypesForClasses(theEntityClasses, theDissecter);
 
-        GenericEntitySet entitySet = new GenericEntitySet(types);
+		GenericEntitySet entitySet = createEntitySet.apply(types);
 
         duplicate(entities, type -> {
             EntityType genericType = types.getEntityType(type);
@@ -113,23 +113,18 @@ public class EntitySetConverter {
     }
 
     /**
-     * Duplicates a set of entities in some custom way
-     * 
-     * @param entities
-     *            The entities to duplicate
-     * @param entityTypeTest
-     *            Knows which types are entity types
-     * @param creator
-     *            Supplies dissecters that know how to put together custom entities for each real entity type
-     * @param directMap
-     *            An optional function that will generate a value that this method will use as the duplicate of the given value instead of
-     *            performing the duplication operation on it
-     * @param withMappedCollections
-     *            Whether to hook up mapped collections in the duplicates
-     * @param withIds
-     *            Whether to populate the duplicated values with IDs
-     * @return The entity map with the duplicated values mapped by the corresponding original real entities
-     */
+	 * Duplicates a set of entities in some custom way
+	 * 
+	 * @param <T> The type of entities to create
+	 * @param entities The entities to duplicate
+	 * @param entityTypeTest Knows which types are entity types
+	 * @param creator Supplies dissecters that know how to put together custom entities for each real entity type
+	 * @param directMap An optional function that will generate a value that this method will use as the duplicate of the given value
+	 *        instead of performing the duplication operation on it
+	 * @param withMappedCollections Whether to hook up mapped collections in the duplicates
+	 * @param withIds Whether to populate the duplicated values with IDs
+	 * @return The entity map with the duplicated values mapped by the corresponding original real entities
+	 */
     public <T> EntityMap<T> duplicate(EntitySet entities, Function<Class<?>, ValueDissecter> creator, Function<Object, T> directMap,
             Predicate<Type> entityTypeTest, boolean withMappedCollections, boolean withIds) {
         EntityMap<T> entitiesById = new EntityMap<>();
@@ -216,28 +211,24 @@ public class EntitySetConverter {
      *            Whether to set the IDs on the new entities (this has implications for hibernate)
      * @return The imported real entity set
      */
-    public EntitySet importEntities(GenericEntitySet entitySet, boolean withMappedCollections, boolean withIds) {
+	public EntitySet importEntities(GenericEntitySet entitySet, boolean withMappedCollections, boolean withIds) {
         EntitySet entityTree = new EntitySet();
         // First, create all the entity values using the values of all non-entity fields
-        for (EntityType type : entitySet.getCurrentTypes()) {
-            Class<?> clazz = entitySet.getCurrentTypes().getMappedEntity(type);
+        for (EntityType type : entitySet.getTypes()) {
+            Class<?> clazz = entitySet.getTypes().getMappedEntity(type);
             entityTree.addClass(clazz);
             ValueDissecter dissecter = (ValueDissecter) theDissecter.getDissecter(clazz).dissect(clazz, null);
             Map<String, Object> fields = new LinkedHashMap<>();
-            for (GenericEntity entity : entitySet.get(type.getName())) {
-                if (!entity.getCurrentType().equals(type))
-				 {
+			for (GenericEntity entity : entitySet.queryAll(type.getName())) {
+                if (!entity.getType().equals(type))
 					continue; // Sub-type
-				}
                 for (TypedField field : dissecter.getFields()) {
-                    if (PersistenceUtils.hasEntityType(field.type, theDissecter, REAL_TYPE_TEST)) {
+					if (PersistenceUtils.hasEntityType(field.type, theDissecter, REAL_TYPE_TEST))
 						continue;
-					}
-                    if (!withIds && field.id) {
+					else if (!withIds && field.id)
 						continue;
-					}
-                    if (field.type instanceof EnumType) {
-						fields.put(field.name, getEnumValue(entitySet.getCurrentTypes(), (EnumValue) entity.get(field.name)));
+					else if (field.type instanceof EnumType) {
+						fields.put(field.name, getEnumValue(entitySet.getTypes(), (EnumValue) entity.get(field.name)));
 					} else {
 						fields.put(field.name, entity.get(field.name));
 					}
@@ -249,22 +240,20 @@ public class EntitySetConverter {
         }
 
         // Link entity fields
-        RealEntityCopyGetter copyGetter = new RealEntityCopyGetter(entitySet.getCurrentTypes(), entityTree);
-        for (EntityType type : entitySet.getCurrentTypes()) {
-            Class<?> clazz = entitySet.getCurrentTypes().getMappedEntity(type);
+        RealEntityCopyGetter copyGetter = new RealEntityCopyGetter(entitySet.getTypes(), entityTree);
+        for (EntityType type : entitySet.getTypes()) {
+            Class<?> clazz = entitySet.getTypes().getMappedEntity(type);
             ValueDissecter dissecter = (ValueDissecter) theDissecter.getDissecter(clazz).dissect(clazz, null);
 
             // Get the list of fields we'll link for this type
             List<TypedField> fields = new ArrayList<>();
             for (TypedField field : dissecter.getFields()) {
-                if (!withMappedCollections && field.mapping != null) {
+				if (!withMappedCollections && field.mapping != null)
 					continue;
-				}
-                if (!PersistenceUtils.hasEntityType(field.type, theDissecter, REAL_TYPE_TEST))
-				 {
+				else if (!PersistenceUtils.hasEntityType(field.type, theDissecter, REAL_TYPE_TEST))
 					continue; // Already handled
-				}
-                fields.add(field);
+				else
+					fields.add(field);
             }
 
             // Need the typed fields for collection sorting mostly
@@ -273,11 +262,9 @@ public class EntitySetConverter {
 				typedFields.put(f.name, f);
 			}
 
-            for (GenericEntity genericEntity : entitySet.get(type.getName())) {
-                if (!genericEntity.getCurrentType().equals(type))
-				 {
+			for (GenericEntity genericEntity : entitySet.queryAll(type.getName())) {
+                if (!genericEntity.getType().equals(type))
 					continue; // Sub-type
-				}
                 Object realEntity = entityTree.get(clazz, genericEntity.getIdentity());
                 for (TypedField field : fields) {
                     try {
@@ -296,35 +283,29 @@ public class EntitySetConverter {
         return entityTree;
     }
 
-    private <E extends Enum<E>> E getEnumValue(EntityTypeSet entityTypes, EnumValue value) {
-        if (value == null) {
+	private static <E extends Enum<E>> E getEnumValue(EntityTypeSet entityTypes, EnumValue value) {
+		if (value == null)
 			return null;
-		}
         Class<E> enumClazz = (Class<E>) entityTypes.getMappedEnum(value.getEnumType());
         return Enum.valueOf(enumClazz, value.getName());
     }
 
     private Object linkEntityDependencies(Object value, Type type, Predicate<Type> entityTypeTester, Function<Object, ?> entityCopyGetter,
             TypedField field) {
-        if (value == null) {
+		if (value == null)
 			return null;
-		}
         if (entityTypeTester.test(type)) {
-            if (theEntityFilter != null && !theEntityFilter.test(value)) {
+			if (theEntityFilter != null && !theEntityFilter.test(value))
 				return null;
-			}
             Object ret = entityCopyGetter.apply(value);
-            if (ret != null) {
+			if (ret != null)
 				return ret;
-			}
-        } else if (!PersistenceUtils.hasEntityType(type, theDissecter, entityTypeTester)) {
+		} else if (!PersistenceUtils.hasEntityType(type, theDissecter, entityTypeTester))
 			return value;
-		}
         Class<?> raw = PersistenceUtils.getRawType(type);
         DissecterGenerator gen = theDissecter.getDissecter(raw);
-        if (gen == null) {
+		if (gen == null)
 			throw new IllegalStateException("Unrecognized type " + PersistenceUtils.toString(type));
-		}
         Dissecter dissecter = gen.dissect(type, gen.getSubType(value.getClass()));
         if (dissecter instanceof ValueDissecter) {
             ValueDissecter vd = (ValueDissecter) dissecter;
@@ -339,9 +320,8 @@ public class EntitySetConverter {
             CollectionDissecter cd = (CollectionDissecter) dissecter;
             Type compType = cd.getComponentType();
             Collection<Object> elements = new ArrayList<>();
-            for (Object el : cd.getElements(value)) {
+			for (Object el : cd.getElements(value))
 				elements.add(linkEntityDependencies(el, compType, entityTypeTester, entityCopyGetter, null));
-			}
             return cd.createFrom(elements, field);
         }
         throw new IllegalStateException("Unrecognized entity type " + PersistenceUtils.toString(type));
@@ -382,13 +362,13 @@ public class EntitySetConverter {
         public Object apply(Object value) {
             if (value instanceof GenericEntity) {
                 GenericEntity gen = (GenericEntity) value;
-                Class<?> realType = theGenericTypes.getMappedEntity(gen.getCurrentType());
+                Class<?> realType = theGenericTypes.getMappedEntity(gen.getType());
 				if (realType == null) {
-					throw new IllegalStateException("No entity class mapped for " + gen.getCurrentType());
+					throw new IllegalStateException("No entity class mapped for " + gen.getType());
 				}
                 Object ret = theRealEntities.get(realType, gen.getIdentity());
                 if (ret == null) {
-					throw new IllegalStateException("No real entity mapped for " + gen.getCurrentType() + ", ID " + gen.getIdentity());
+					throw new IllegalStateException("No real entity mapped for " + gen.getType() + ", ID " + gen.getIdentity());
 				}
                 return ret;
             } else if (value instanceof EnumValue) {

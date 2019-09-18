@@ -19,5 +19,5 @@ public interface EntityMigrator {
      * @return The entity instance's value after the migration, or null if the instance should be deleted as a result of this migration. The
      *         new entity can be the modified <code>oldVersionEntity</code> or a new entity to replace the argument.
      */
-    GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter);
+	GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter);
 }

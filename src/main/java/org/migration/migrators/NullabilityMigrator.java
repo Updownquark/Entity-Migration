@@ -23,7 +23,7 @@ public class NullabilityMigrator extends FieldTypeModificationMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
         if (!nullable && oldVersionEntity.get(field) == null)
             return null;
         else

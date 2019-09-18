@@ -27,7 +27,7 @@ public class FieldRenameMigrator extends FieldTypeModificationMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
         oldVersionEntity.set(afterName, oldVersionEntity.get(beforeName));
         return oldVersionEntity;
     }

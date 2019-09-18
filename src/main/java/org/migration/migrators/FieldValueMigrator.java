@@ -82,11 +82,11 @@ public abstract class FieldValueMigrator implements CustomMigrator {
      *            The dissecter to understand data types
      * @return The new value for this migrator's field for the given entity
      */
-    protected abstract Object getFieldValue(GenericEntity oldVersionEntity, EntityField field, GenericEntitySet allEntities,
+	protected abstract Object getFieldValue(GenericEntity oldVersionEntity, EntityField field, GenericEntitySet allEntities,
             TypeSetDissecter dissecter);
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
 		GenericEntity container = (GenericEntity) ValuePullMigrator.evaluateFieldPath(oldVersionEntity, theFieldPath, true);
 		EntityField lastField = theFieldPath.get(theFieldPath.size() - 1);
 		if (isForced || container.get(lastField.getName()) == null) {

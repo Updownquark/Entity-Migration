@@ -25,17 +25,17 @@ public class AscendToSuperType extends JavaMigrator {
     }
 
     @Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
-        EntityType superType = allEntities.getCurrentTypes().getEntityType(theSuperType);
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+        EntityType superType = allEntities.getTypes().getEntityType(theSuperType);
         if (superType == null)
             throw new IllegalArgumentException("No such type " + theSuperType);
-        if (!superType.isAssignableFrom(oldVersionEntity.getCurrentType()))
+        if (!superType.isAssignableFrom(oldVersionEntity.getType()))
             throw new IllegalArgumentException(
-                    "Type " + oldVersionEntity.getCurrentType().getName() + " is not a sub-type of " + theSuperType);
+                    "Type " + oldVersionEntity.getType().getName() + " is not a sub-type of " + theSuperType);
 
         GenericEntity newEntity = allEntities.addEntity(theSuperType);
         /* This is relying on the fact that setting the ID of an entity does not check whether an entity of a sub-type with the same ID
-         * exists.  If the GenericEntitySet.idChanged() method checked this, this would fail.  In fact, this operation is safe because the
+         * exists.  If the SimpleGenericEntitySet.idChanged() method checked this, this would fail.  In fact, this operation is safe because the
          * replacement operation will immediately delete the sub-typed entity that would cause the collision.
          * If that constraint is ever checked, we'll have to do some fancy magic to get around it here. */
         for (EntityField field : superType)

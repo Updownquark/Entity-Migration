@@ -50,7 +50,7 @@ public class ValuePullMigrator extends JavaMigrator {
 	}
 
 	@Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
 		assign(oldVersionEntity, theFieldPath, Arrays.asList(theTargetField), allEntities, dissecter);
         return oldVersionEntity;
     }
@@ -181,13 +181,13 @@ public class ValuePullMigrator extends JavaMigrator {
 				throw new IllegalArgumentException(
                         "Value of type " + value.getClass().getName() + " cannot be assigned to a field of type " + targetType);
 			}
-            if (!((EntityType) targetType).isAssignableFrom(((GenericEntity) value).getCurrentType())) {
+            if (!((EntityType) targetType).isAssignableFrom(((GenericEntity) value).getType())) {
 				throw new IllegalArgumentException(
                         "Value of type " + PersistenceUtils.toString(value.getClass()) + " cannot be assigned to a field of type "
                                 + targetType);
 			}
         } else if (value instanceof GenericEntity) {
-            throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getCurrentType()
+            throw new IllegalArgumentException("Value of type " + ((GenericEntity) value).getType()
                     + " cannot be assigned to a field of type " + PersistenceUtils.toString(targetType));
         } else if (!PersistenceUtils.isConvertible(value.getClass(), targetType)) {
             throw new IllegalArgumentException("Value of type " + PersistenceUtils.toString(value.getClass())

@@ -41,7 +41,7 @@ public class ValuePushMigrator extends JavaMigrator {
 	}
 
 	@Override
-    public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
+	public GenericEntity migrate(GenericEntity oldVersionEntity, GenericEntitySet allEntities, TypeSetDissecter dissecter) {
 		ValuePullMigrator.assign(oldVersionEntity, Arrays.asList(theField), theFieldPath, allEntities, dissecter);
 		return oldVersionEntity;
     }
