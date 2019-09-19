@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.migration.migrators.FieldRenameMigrator;
+import org.migration.migrators.FieldTypeModificationMigrator;
 import org.migration.util.PersistenceUtils;
 
 /** A typed set of fields and their data */
@@ -245,6 +247,21 @@ public class GenericEntity {
 			set(field.getName(), entity.get(field.getName()));
 		}
 		return this;
+	}
+
+	protected void migrate(FieldTypeModificationMigrator fieldModification) {
+		switch (fieldModification.getType()) {
+		case fieldAddition:
+			break; // Setting the field value will be handled by the migration itself--nothing to do here
+		case fieldRemoval:
+			theFieldMap.remove(fieldModification.field);
+			break;
+		case fieldRename:
+			FieldRenameMigrator rename = (FieldRenameMigrator) fieldModification;
+			theFieldMap.put(rename.afterName, theFieldMap.remove(rename.beforeName));
+			break;
+		default:
+		}
 	}
 
     /**

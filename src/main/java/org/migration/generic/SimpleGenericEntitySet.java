@@ -313,6 +313,7 @@ public class SimpleGenericEntitySet implements GenericEntitySet {
 			throw new IllegalArgumentException("Unrecognized entity type " + entity + " for entity migrator " + migrator);
 		}
 
+		Deque<GenericEntity> entities = null;
         if (migrator instanceof EntityTypeModificationMigrator) {
             EntitySetNode node = type == null ? null : theEntities.getNode(type, null);
             switch (((EntityTypeModificationMigrator) migrator).getType()) {
@@ -357,11 +358,15 @@ public class SimpleGenericEntitySet implements GenericEntitySet {
 					theTypes.migrate((EntityTypeModificationMigrator) migrator, true);
 				}
                 break;
-            case deletion:
             case fieldAddition:
             case fieldRemoval:
             case fieldRename:
             case fieldNullability:
+				entities = queryAll(entity);
+				for (GenericEntity e : entities)
+					e.migrate((FieldTypeModificationMigrator) migrator);
+				//$FALL-THROUGH$
+			case deletion:
 				theTypes.migrate((EntityTypeModificationMigrator) migrator, true);
                 break;
             }
@@ -401,7 +406,8 @@ public class SimpleGenericEntitySet implements GenericEntitySet {
             }
         }
         if (type != null) {
-			Deque<GenericEntity> entities = queryAll(entity);
+			if (entities == null)
+				entities = queryAll(entity);
             GenericEntity[] listCopy = entities.toArray(new GenericEntity[entities.size()]);
             int removed = 0;
             int replaced = 0;
