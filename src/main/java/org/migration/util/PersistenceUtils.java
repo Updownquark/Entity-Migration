@@ -192,7 +192,7 @@ public class PersistenceUtils {
      * @return The converted XML name
      */
     public static String javaToXml(String javaName) {
-		String ret = StringUtils.parseByCase(javaName).toKebabCase();
+		String ret = StringUtils.parseByCase(javaName, false).toKebabCase();
         if ((Character.isAlphabetic(ret.charAt(0)) || ret.charAt(0) == '_') && !javaName.toLowerCase().startsWith("xml")) {
         } else {
 			ret = "_." + ret;
