@@ -257,7 +257,8 @@ public class MigratorFactory {
             String map = xml.getAttributeValue("map");
             PersistenceUtils.getMappedField(
 				new EntityField(entity, fieldName, fieldType, map, split(xml.getAttributeValue("sorting"))), types);
-			return new FieldAddedMigrator(entityName, fieldName, fieldType, map, split(xml.getAttributeValue("sorting")));
+			return new FieldAddedMigrator(entityName, fieldName, fieldType, map, split(xml.getAttributeValue("sorting")),
+				xml.getTextTrim());
         case "value-added":
             if (enumName == null) {
 				throw new IllegalArgumentException("No enum specified for migration " + xml.getName());
